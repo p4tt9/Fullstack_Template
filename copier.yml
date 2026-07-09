@@ -1,0 +1,169 @@
+_envops:
+  variable_start_string: "[["
+  variable_end_string: "]]"
+  block_start_string: "[%"
+  block_end_string: "%]"
+  comment_start_string: "[#"
+  comment_end_string: "#]"
+
+_templates_suffix: ""
+
+_copy_without_render:
+  - "**/*.ico"
+
+_exclude:
+  - "copier.yml"
+  - ".git"
+  - ".github"
+  - ".DS_Store"
+  - "**/.DS_Store"
+  - "**/node_modules"
+  - "**/dist"
+  - "**/target"
+  - "**/.angular"
+
+_tasks:
+  - command: git -C "[[ project_slug ]]" init -b "[[ git_default_branch ]]"
+    when: "[% if init_git %]true[% else %]false[% endif %]"
+  - command: git -C "[[ project_slug ]]" remote add origin "[[ git_remote_url ]]"
+    when: "[% if init_git and git_remote_url %]true[% else %]false[% endif %]"
+
+project_name:
+  type: str
+  help: Human-readable project name.
+  default: Fullstack Template
+
+project_slug:
+  type: str
+  help: Project folder and Docker Compose project name.
+  default: "[[ project_name | lower | regex_replace('[^a-z0-9]+', '-') | regex_replace('(^-|-$)', '') ]]"
+
+java_package_base:
+  type: str
+  help: Base package prefix for Java sources.
+  default: com.example
+
+java_package_project_segment:
+  type: str
+  help: Java-safe package segment derived from project name.
+  default: "[[ ('app-' ~ project_slug) | regex_replace('[^a-z0-9]+', '') ]]"
+  when: false
+
+java_package:
+  type: str
+  help: Java base package for the Spring Boot backend.
+  default: "[[ java_package_base ]].[[ java_package_project_segment ]]"
+  when: false
+
+java_package_path:
+  type: str
+  help: "Java package as path. Keep this in sync with java_package if you override it."
+  default: "[[ java_package | replace('.', '/') ]]"
+  when: false
+
+java_application_class:
+  type: str
+  help: Spring Boot application class name.
+  default: "[[ ('app-' ~ project_slug) | regex_replace('[^a-z0-9]+', ' ') | title | replace(' ', '') ]]Application"
+  when: false
+
+backend_artifact_id:
+  type: str
+  help: Maven artifact id for the backend.
+  default: "[[ project_slug ]]-backend"
+  when: false
+
+backend_group_id:
+  type: str
+  help: Maven group id for the backend.
+  default: "[[ java_package_base ]]"
+  when: false
+
+frontend_app_name:
+  type: str
+  help: Angular application/package name.
+  default: "[[ project_slug ]]-frontend"
+  when: false
+
+init_git:
+  type: bool
+  help: Initialize a Git repository in the generated project folder.
+  default: true
+
+git_remote_url:
+  type: str
+  help: Optional Git remote URL, for example git@github.com:org/repo.git. Leave empty to skip.
+  default: ""
+
+git_default_branch:
+  type: str
+  help: Initial Git branch name.
+  default: main
+
+app_port:
+  type: int
+  help: Local host port for the single public app entrypoint.
+  default: 4200
+
+public_base_url:
+  type: str
+  help: Public base URL for this generated app. Use one subdomain per project.
+  default: "http://localhost:[[ app_port ]]"
+
+auth_mode:
+  type: str
+  help: Use the bundled Keycloak under /auth or an existing external Keycloak.
+  choices:
+    bundled: bundled
+    external: external
+  default: bundled
+
+external_auth_issuer_uri:
+  type: str
+  help: External OIDC issuer URI. Used only when auth_mode is external.
+  default: https://auth.example.com/realms/app
+
+postgres_db:
+  type: str
+  default: app
+
+postgres_user:
+  type: str
+  default: app
+
+postgres_password:
+  type: str
+  default: app
+  secret: true
+
+keycloak_realm:
+  type: str
+  default: "[[ project_slug ]]"
+  when: false
+
+keycloak_client_id:
+  type: str
+  default: "[[ frontend_app_name ]]"
+  when: false
+
+keycloak_admin_username:
+  type: str
+  default: admin
+
+keycloak_admin_password:
+  type: str
+  default: admin
+  secret: true
+
+keycloak_test_username:
+  type: str
+  default: user
+
+keycloak_test_password:
+  type: str
+  default: user
+  secret: true
+
+keycloak_test_email:
+  type: str
+  default: user@example.local
