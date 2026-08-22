@@ -28,6 +28,7 @@ export class AuthService {
   private readonly refreshTokenKey = 'auth.refresh_token';
   private readonly pkceVerifierKey = 'auth.pkce_verifier';
   private readonly stateKey = 'auth.state';
+  private refreshPromise: Promise<string | null> | null = null;
 
   readonly authenticated = signal(this.hasValidAccessToken());
 
@@ -36,13 +37,33 @@ export class AuthService {
     return token && this.isTokenValid(token) ? token : null;
   }
 
+  async validAccessToken(forceRefresh = false, rejectedToken?: string): Promise<string | null> {
+    const token = this.accessToken();
+    if (token && (!forceRefresh || token !== rejectedToken)) {
+      return token;
+    }
+
+    const refreshToken = sessionStorage.getItem(this.refreshTokenKey);
+    if (!refreshToken) {
+      this.authenticated.set(false);
+      return null;
+    }
+
+    if (!this.refreshPromise) {
+      this.refreshPromise = this.refreshAccessToken(refreshToken)
+        .finally(() => this.refreshPromise = null);
+    }
+
+    return this.refreshPromise;
+  }
+
   async handleCallback(): Promise<boolean> {
     const params = new URLSearchParams(window.location.search);
     const code = params.get('code');
     const state = params.get('state');
 
     if (!code) {
-      this.authenticated.set(this.hasValidAccessToken());
+      await this.validAccessToken();
       return false;
     }
 
@@ -119,6 +140,30 @@ export class AuthService {
     sessionStorage.removeItem(this.pkceVerifierKey);
     sessionStorage.removeItem(this.stateKey);
     this.authenticated.set(this.hasValidAccessToken());
+  }
+
+  private async refreshAccessToken(refreshToken: string): Promise<string | null> {
+    const body = new URLSearchParams({
+      grant_type: 'refresh_token',
+      client_id: authConfig.clientId,
+      refresh_token: refreshToken
+    });
+
+    try {
+      const token = await firstValueFrom(this.http.post<TokenResponse>(
+        `${authConfig.issuer}/protocol/openid-connect/token`,
+        body.toString(),
+        {
+          headers: new HttpHeaders({ 'Content-Type': 'application/x-www-form-urlencoded' })
+        }
+      ));
+
+      this.storeToken(token);
+      return token.access_token;
+    } catch {
+      this.clearSession();
+      return null;
+    }
   }
 
   private clearSession(): void {
