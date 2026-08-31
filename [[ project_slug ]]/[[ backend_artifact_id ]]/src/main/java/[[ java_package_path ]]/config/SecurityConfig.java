@@ -14,6 +14,8 @@ public class SecurityConfig {
 		return http
 				.authorizeHttpRequests(authorize -> authorize
 						.requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
+						.requestMatchers("/v3/api-docs", "/v3/api-docs/**").permitAll()
+						.requestMatchers("/swagger-ui/**", "/swagger-ui.html").permitAll()
 						.requestMatchers("/api/hello").permitAll()
 						.anyRequest().authenticated())
 				.oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))

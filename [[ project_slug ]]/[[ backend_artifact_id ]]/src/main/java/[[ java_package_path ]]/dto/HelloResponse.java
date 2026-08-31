@@ -1,4 +1,6 @@
 package [[ java_package ]].dto;
 
-public record HelloResponse(String message) {
+import jakarta.validation.constraints.NotNull;
+
+public record HelloResponse(@NotNull String message) {
 }
