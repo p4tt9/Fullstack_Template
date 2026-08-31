@@ -4,6 +4,11 @@ This project was generated using [Angular CLI](https://github.com/angular/angula
 
 ## Development server
 
+For the artifact
+```bash
+docker compose -f ./[[ project_slug ]]/[[ backend_artifact_id ]]/api/local/docker-compose.yaml -p local up --build
+```
+
 To start a local development server, run:
 
 ```bash

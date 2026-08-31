@@ -1,0 +1,22 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:apidocs;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  flyway:
+    enabled: false
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost/auth/realms/test
+          jwk-set-uri: http://localhost/auth/realms/test/protocol/openid-connect/certs
+
+springdoc:
+  api-docs:
+    enabled: true

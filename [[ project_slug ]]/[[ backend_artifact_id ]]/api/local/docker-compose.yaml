@@ -1,0 +1,10 @@
+services:
+  frontend-api-client-generator:
+    build:
+      context: ../..
+      dockerfile: api/local/Dockerfile
+      args:
+        API_CLIENT_VERSION: 1.0.0
+    volumes:
+      # If the frontend and backend folders are opened in separate IDE windows, make sure to remount the artifact folder.
+      - ../../../[[ frontend_app_name ]]/local-packages:/target
