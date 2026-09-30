@@ -1,6 +1,6 @@
 # [[project_name]]
 
-Angular-Frontend, Spring-Boot-Backend (Java 21), PostgreSQL und Flyway.
+Angular-Frontend, Spring-Boot-Backend (Java 25), PostgreSQL und Flyway.
 [% if auth_mode == "bundled" %]
 Keycloak wird mit einem lokalen Test-Realm mitgeliefert.
 [% else %]
@@ -11,7 +11,7 @@ PKCE S256 und den lokalen sowie produktiven Redirect-URLs/Web Origins enthalten.
 
 ## Schnellstart: Backend in IntelliJ
 
-Voraussetzungen: Java 21, Node.js 22, Docker mit Compose v2 und IntelliJ IDEA.
+Voraussetzungen: Java 25, Node.js 22, Docker mit Compose v2 und IntelliJ IDEA.
 Im Projektverzeichnis einmalig:
 
 ```bash
@@ -28,7 +28,8 @@ Das startet PostgreSQL und gegebenenfalls Keycloak in Docker sowie das Frontend
 lokal mit `ng serve`. Änderungen am Frontend werden automatisch neu gebaut und
 im Browser aktualisiert. Das Backend wird unabhängig in IntelliJ gestartet:
 
-1. `[[ backend_artifact_id ]]/pom.xml` als Maven-Projekt öffnen und JDK 21 wählen.
+1. `[[ backend_artifact_id ]]/pom.xml` als Maven-Projekt öffnen und JDK 25 wählen.
+   Auch den Maven-Runner unter Settings → Build Tools → Maven → Runner auf JDK 25 setzen.
 2. Main-Klasse `[[ java_package ]].[[ java_application_class ]]` öffnen.
 3. Eine Application-Run-Konfiguration für diese Klasse anlegen.
 4. Unter **Program arguments** `--spring.profiles.active=local` eintragen

@@ -1,6 +1,6 @@
 # Fullstack-Copier-Template
 
-Erzeugt ein eigenständiges Projekt mit Angular 19, Spring Boot 4 / Java 21,
+Erzeugt ein eigenständiges Projekt mit Angular 19, Spring Boot 4 / Java 25,
 PostgreSQL 16, Flyway und optional Keycloak 26.3. Diese README beschreibt die
 **Pflege und Verwendung des Templates**. Die README im erzeugten Projekt erklärt
 Entwicklung, IntelliJ, Docker und Deployment.
@@ -8,7 +8,7 @@ Entwicklung, IntelliJ, Docker und Deployment.
 ## Projekt erzeugen
 
 Voraussetzungen: Python mit [Copier](https://copier.readthedocs.io/), Git.
-Für die anschließende Entwicklung: Node.js 22, Java 21 und Docker Compose v2.
+Für die anschließende Entwicklung: Node.js 22, Java 25 und Docker Compose v2.
 
 ```bash
 pipx install copier
