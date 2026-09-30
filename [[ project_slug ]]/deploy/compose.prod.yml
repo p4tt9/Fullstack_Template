@@ -1,0 +1,107 @@
+name: [[ project_slug ]]
+
+services:
+  postgresql:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?Set POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+[% if auth_mode == "bundled" %]
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+[% endif %]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:?Set POSTGRES_USER} -d $${POSTGRES_DB:?Set POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks: ["[[ project_slug ]]"]
+    logging: &logging
+      driver: json-file
+      options: {max-size: "10m", max-file: "3"}
+
+[% if auth_mode == "bundled" %]
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.3
+    restart: unless-stopped
+    command: ["start", "--import-realm"]
+    depends_on:
+      postgresql: {condition: service_healthy}
+    environment:
+      KC_DB: postgres
+      KC_DB_URL_HOST: postgresql
+      KC_DB_URL_DATABASE: keycloak_db
+      KC_DB_URL_PORT: 5432
+      KC_DB_USERNAME: ${POSTGRES_USER:?Set POSTGRES_USER}
+      KC_DB_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USERNAME:?Set KEYCLOAK_ADMIN_USERNAME}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?Set KEYCLOAK_ADMIN_PASSWORD}
+      KC_HTTP_ENABLED: "true"
+      KC_HTTP_RELATIVE_PATH: /auth
+      KC_HOSTNAME: ${PUBLIC_BASE_URL:?Set PUBLIC_BASE_URL}/auth
+      KC_HOSTNAME_STRICT: "true"
+      KC_PROXY_HEADERS: xforwarded
+      KC_HEALTH_ENABLED: "true"
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:?Set PUBLIC_BASE_URL}
+    volumes:
+      - ./keycloak/realm-prod.json:/opt/keycloak/data/import/realm.json:ro
+    ports:
+      - "${KEYCLOAK_BIND_ADDRESS:-127.0.0.1}:${KEYCLOAK_HTTP_PORT:-18081}:8080"
+    networks: ["[[ project_slug ]]"]
+    logging: *logging
+
+[% endif %]
+  [[ backend_artifact_id ]]:
+    image: ${BACKEND_IMAGE:?Set BACKEND_IMAGE}
+    restart: unless-stopped
+    depends_on:
+      postgresql: {condition: service_healthy}
+[% if auth_mode == "bundled" %]
+      keycloak: {condition: service_started}
+[% endif %]
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgresql:5432/${POSTGRES_DB:?Set POSTGRES_DB}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:?Set POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+      SPRING_FLYWAY_ENABLED: "true"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      SPRING_JPA_OPEN_IN_VIEW: "false"
+[% if auth_mode == "bundled" %]
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: ${PUBLIC_BASE_URL:?Set PUBLIC_BASE_URL}/auth/realms/[[ keycloak_realm ]]
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/auth/realms/[[ keycloak_realm ]]/protocol/openid-connect/certs
+[% else %]
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: ${EXTERNAL_AUTH_ISSUER_URI:?Set EXTERNAL_AUTH_ISSUER_URI}
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: ${EXTERNAL_AUTH_ISSUER_URI}/protocol/openid-connect/certs
+[% endif %]
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:?Set PUBLIC_BASE_URL}
+    ports:
+      - "${BACKEND_BIND_ADDRESS:-127.0.0.1}:${BACKEND_HTTP_PORT:-18080}:8080"
+    networks: ["[[ project_slug ]]"]
+    logging: *logging
+
+  [[ frontend_app_name ]]:
+    image: ${FRONTEND_IMAGE:?Set FRONTEND_IMAGE}
+    restart: unless-stopped
+    depends_on:
+      - [[ backend_artifact_id ]]
+    networks:
+      [[ project_slug ]]:
+      proxy:
+        aliases: ["[[ project_slug ]]-frontend"]
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+    logging: *logging
+
+networks:
+  [[ project_slug ]]:
+  proxy:
+    external: true
+
+volumes:
+  postgres_data:

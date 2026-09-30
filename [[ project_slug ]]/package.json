@@ -1,0 +1,12 @@
+{
+  "name": "[[ project_slug ]]-workspace",
+  "private": true,
+  "scripts": {
+    "setup": "npm --prefix [[ frontend_app_name ]] ci",
+    "dev": "npm run infra:up && npm run frontend",
+    "infra:up": "docker compose -f compose.dev.yml up -d --wait",
+    "infra:down": "docker compose -f compose.dev.yml down",
+    "frontend": "npm --prefix [[ frontend_app_name ]] start",
+    "backend": "cd [[ backend_artifact_id ]] && ./mvnw spring-boot:run -Dspring-boot.run.profiles=local"
+  }
+}

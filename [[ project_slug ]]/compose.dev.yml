@@ -1,0 +1,37 @@
+name: [[ project_slug ]]-dev
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: "[[ postgres_db ]]"
+      POSTGRES_USER: "[[ postgres_user ]]"
+      POSTGRES_PASSWORD: "[[ postgres_password ]]"
+    ports: ["127.0.0.1:5432:5432"]
+    volumes: ["postgres_dev_data:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+[% if auth_mode == "bundled" %]
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.3
+    command: start-dev --import-realm
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: "[[ keycloak_admin_username ]]"
+      KC_BOOTSTRAP_ADMIN_PASSWORD: "[[ keycloak_admin_password ]]"
+      KC_HTTP_RELATIVE_PATH: /auth
+      KC_HOSTNAME: http://localhost:[[ app_port ]]/auth
+      KC_HOSTNAME_STRICT: "false"
+      KC_PROXY_HEADERS: xforwarded
+      PUBLIC_BASE_URL: http://localhost:[[ app_port ]]
+    ports: ["127.0.0.1:8081:8080"]
+    volumes:
+      - ./infra/keycloak/realm.json:/opt/keycloak/data/import/realm.json:ro
+      - keycloak_dev_data:/opt/keycloak/data
+[% endif %]
+volumes:
+  postgres_dev_data:
+[% if auth_mode == "bundled" %]
+  keycloak_dev_data:
+[% endif %]

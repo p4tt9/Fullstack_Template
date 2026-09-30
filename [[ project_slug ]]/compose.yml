@@ -20,6 +20,7 @@ services:
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USERNAME:-[[ keycloak_admin_username ]]}
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-[[ keycloak_admin_password ]]}
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-[[ public_base_url ]]}
       KC_HTTP_RELATIVE_PATH: /auth
       KC_HOSTNAME: ${KEYCLOAK_HOSTNAME:-${PUBLIC_BASE_URL:-[[ public_base_url ]]}/auth}
       KC_HOSTNAME_STRICT: "false"
@@ -38,9 +39,9 @@ services:
 [% endif %]
     environment:
       SPRING_APPLICATION_NAME: ${SPRING_APPLICATION_NAME:-[[ backend_artifact_id ]]}
-      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL:-jdbc:postgresql://postgres:5432/[[ postgres_db ]]}
-      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME:-[[ postgres_user ]]}
-      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD:-[[ postgres_password ]]}
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL:-jdbc:postgresql://postgres:5432/${POSTGRES_DB:-[[ postgres_db ]]}}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME:-${POSTGRES_USER:-[[ postgres_user ]]}}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD:-${POSTGRES_PASSWORD:-[[ postgres_password ]]}}
       SPRING_FLYWAY_ENABLED: ${SPRING_FLYWAY_ENABLED:-true}
       SPRING_FLYWAY_LOCATIONS: ${SPRING_FLYWAY_LOCATIONS:-classpath:db/migration}
       SPRING_JPA_HIBERNATE_DDL_AUTO: ${SPRING_JPA_HIBERNATE_DDL_AUTO:-validate}

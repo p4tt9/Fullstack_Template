@@ -1,0 +1,34 @@
+{
+  "realm": "[[ keycloak_realm ]]",
+  "enabled": true,
+  "roles": {
+    "realm": [
+      {
+        "name": "USER",
+        "description": "Default application user"
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "[[ keycloak_client_id ]]",
+      "enabled": true,
+      "publicClient": true,
+      "protocol": "openid-connect",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": [
+        "${PUBLIC_BASE_URL}/*"
+      ],
+      "webOrigins": [
+        "${PUBLIC_BASE_URL}"
+      ],
+      "attributes": {
+        "post.logout.redirect.uris": "${PUBLIC_BASE_URL}/*",
+        "pkce.code.challenge.method": "S256"
+      }
+    }
+  ],
+  "sslRequired": "external",
+  "bruteForceProtected": true
+}

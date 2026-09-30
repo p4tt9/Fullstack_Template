@@ -18,13 +18,13 @@
       "standardFlowEnabled": true,
       "directAccessGrantsEnabled": true,
       "redirectUris": [
-        "[[ public_base_url ]]/*"
+        "${PUBLIC_BASE_URL}/*"
       ],
       "webOrigins": [
-        "[[ public_base_url ]]"
+        "${PUBLIC_BASE_URL}"
       ],
       "attributes": {
-        "post.logout.redirect.uris": "[[ public_base_url ]]/*"
+        "post.logout.redirect.uris": "${PUBLIC_BASE_URL}/*"
       }
     }
   ],

@@ -1,0 +1,17 @@
+# Activate explicitly in IntelliJ or with --spring.profiles.active=local.
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/[[ postgres_db ]]
+    username: "[[ postgres_user ]]"
+    password: "[[ postgres_password ]]"
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+[% if auth_mode == "bundled" %]
+          issuer-uri: http://localhost:[[ app_port ]]/auth/realms/[[ keycloak_realm ]]
+          jwk-set-uri: http://localhost:8081/auth/realms/[[ keycloak_realm ]]/protocol/openid-connect/certs
+[% else %]
+          issuer-uri: [[ external_auth_issuer_uri ]]
+          jwk-set-uri: [[ external_auth_issuer_uri ]]/protocol/openid-connect/certs
+[% endif %]
