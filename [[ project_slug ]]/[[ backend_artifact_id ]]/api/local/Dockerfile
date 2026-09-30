@@ -10,21 +10,20 @@ RUN mvn clean verify -ntp -DskipTests -Pgenerate-api
 # --- Stage 2: Angular Client Generation ---
 FROM openapitools/openapi-generator-cli:v7.19.0 AS client-gen
 
-ARG API_CLIENT_VERSION=1.0.5
-ARG NPM_NAME=@backend/api-client
+ARG API_CLIENT_VERSION=1.0.0
+ARG NPM_NAME=@[[ backend_artifact_id ]]/api-client
 ARG NG_VERSION=19.1.0
 
 COPY --from=backend-build /usr/app/target/openapi.json /local/openapi.json
-RUN echo "$API_CLIENT_VERSION" > /local/version.txt
 
-# 2. Generierung des Angular-Clients
-RUN /usr/local/bin/docker-entrypoint.sh generate \
+RUN echo "Generating API client version: ${API_CLIENT_VERSION}" && \
+    /usr/local/bin/docker-entrypoint.sh generate \
     -i /local/openapi.json \
     -g typescript-angular \
     -o /local/out \
-    --additional-properties=npmName=$NPM_NAME \
-    --additional-properties=npmVersion=$(cat /local/version.txt) \
-    --additional-properties=ngVersion=$NG_VERSION
+    --additional-properties=npmName=${NPM_NAME} \
+    --additional-properties=npmVersion=${API_CLIENT_VERSION} \
+    --additional-properties=ngVersion=${NG_VERSION}
 
 # --- Stage 3: Pack Library (.tgz) ---
 FROM node:24.13.0-alpine3.23 AS package
